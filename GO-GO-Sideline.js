@@ -42,6 +42,15 @@
     { index: 13, look: 1, label: 'High red zone · QB run', cue: 'Key the tagged edge. Give if wide, keep behind the lead if he crashes.' },
     { index: 24, look: 0, label: 'Third and two · Pitch answer', cue: 'Keep if the pitch key widens. Pitch early if he commits and the lane is clear.' }
   ].map(entry => ({ ...plays.find(play => play.index === entry.index), ...entry }));
+  const storageKey = 'disco-film-room.saved-calls.v1';
+  const playKey = play => play.formation + '/' + play.name;
+  let saved = new Set();
+  try {
+    const stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    if (Array.isArray(stored)) saved = new Set(stored);
+  } catch {
+    // Keep the current session usable if browser storage is unavailable.
+  }
   let visible = [];
   let selected;
   let deadline = null;
@@ -67,6 +76,9 @@
       get('slot').textContent = play.formation + ' · ' + play.slot;
       get('play').textContent = play.name;
       get('read').textContent = play.cue || play.read;
+      const pinned = saved.has(playKey(play));
+      get('pin').textContent = pinned ? 'Remove saved call' : 'Save call';
+      get('pin').setAttribute('aria-pressed', String(pinned));
     }
     for (const button of get('plays').querySelectorAll('button')) {
       button.setAttribute('aria-pressed', String(Number(button.dataset.index) === play?.index));
@@ -74,8 +86,15 @@
     refreshClock();
   }
 
+  function packagePlays() {
+    const mode = get('package').value;
+    if (mode === 'houston') return houston;
+    if (mode === 'saved') return plays.filter(play => saved.has(playKey(play)));
+    return plays;
+  }
+
   function render() {
-    const source = get('package').value === 'houston' ? houston : plays;
+    const source = packagePlays();
     const query = get('search').value.trim().toLowerCase();
     visible = source.filter(play => [play.formation, play.name, play.slot, play.label].join(' ').toLowerCase().includes(query));
     get('plays').replaceChildren(...visible.map(play => {
@@ -92,7 +111,8 @@
       button.onclick = () => select(play);
       return button;
     }));
-    if (!visible.length) get('plays').textContent = 'No plays match.';
+    if (!visible.length) get('plays').textContent = !source.length
+      ? 'Save a call from the full play list to see it here.' : 'No plays match.';
     select(visible.find(play => play.index === selected?.index) || visible[0]);
   }
 
@@ -100,6 +120,19 @@
     return play.name + '. ' + (play.cue || play.quick);
   }
 
+  get('pin').onclick = () => {
+    if (!selected) return;
+    const key = playKey(selected);
+    if (saved.has(key)) saved.delete(key);
+    else saved.add(key);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify([...saved]));
+    } catch {
+      // The selection remains available for this visit.
+    }
+    if (get('package').value === 'saved') render();
+    else select(selected);
+  };
   get('package').onchange = get('search').oninput = render;
   get('clock').oninput = () => {
     clearInterval(clockTimer);
@@ -121,7 +154,7 @@
     lab.play.focus({ preventScroll: true });
   };
   get('print').onclick = () => {
-    const list = get('package').value === 'houston' ? houston : plays;
+    const list = packagePlays();
     const table = document.createElement('table');
     const head = table.createTHead().insertRow();
     for (const heading of ['Formation', 'Call', 'Slot', 'QB read']) {
@@ -138,19 +171,4 @@
     window.print();
   };
   render();
-})();
-(() => {
-  const picker = document.getElementById('coach-chapter');
-  const player = document.getElementById('coach-player');
-  for (const [title, file] of Object.entries(window.goGoChapterFiles)) picker.add(new Option(title, file));
-  function load() {
-    player.src = window.goGoEmbedded?.[picker.value] || 'GO-GO-Audio/' + picker.value;
-  }
-  picker.onchange = load;
-  player.onplay = () => {
-    speechRequest++;
-    window.speechSynthesis?.cancel();
-    recordedCue?.pause();
-  };
-  load();
 })();

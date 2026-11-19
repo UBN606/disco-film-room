@@ -23,15 +23,39 @@ html{scroll-behavior:smooth}body{font:16px/1.55 "Segoe UI",system-ui,sans-serif;
 #sideline-pitch{padding-top:12px}#sideline-print-sheet{display:none}#sideline button:focus-visible,#sideline select:focus-visible,#sideline input:focus-visible{outline:2px solid #fff;outline-offset:2px}
 @media(max-width:710px){.sideline-work{display:flex;flex-direction:column-reverse}#sideline-plays{max-height:235px}#sideline-detail{padding:12px 4px}.sideline-controls label{max-width:100%}}
 @media print{body,main,#sideline{color:#000;background:#fff;margin:0;padding:0;border:0}main>*{display:none!important}main>#sideline,#sideline-print-sheet{display:block!important}#sideline>:not(.sideline-head):not(#sideline-print-sheet),#sideline-print{display:none!important}#sideline-print-sheet table{width:100%;font-size:9pt}#sideline-print-sheet tr{break-inside:avoid}#sideline-print-sheet td,#sideline-print-sheet th{color:#000;border-color:#aaa}}
+
+html{scroll-padding-top:80px}
+.quick-nav{position:sticky;top:0;z-index:5;display:flex;gap:6px;padding:8px;background:#14241f;border:1px solid #42554b;border-radius:10px;box-shadow:0 8px 18px #0005}
+.quick-nav a{flex:1;text-align:center;padding:9px 4px;color:#f7f0db;text-decoration:none;font-weight:700;border-radius:5px}
+.quick-nav a:first-child{background:#e8cc80;color:#172218}
+.quick-nav a:focus-visible{outline:2px solid white;outline-offset:2px}
+#sideline-pin[aria-pressed=true]{background:#e8cc80;color:#172218}
+#sideline-search{width:100%}
+@media(max-width:710px){
+  main{padding-inline:12px}.hero{min-height:164px;padding:22px 10px;margin-bottom:12px}
+  .hero .jump{gap:7px}.hero .jump a{font-size:.82rem}
+  .quick-nav a{font-size:.85rem;min-height:44px;display:grid;place-items:center}
+  .sideline-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px}
+  .sideline-controls label:nth-child(2){grid-column:1/-1;grid-row:1}
+  .sideline-controls input,.sideline-controls select{min-width:0;font-size:16px;min-height:44px}
+  .sideline-work{flex-direction:column}
+  #sideline-plays{max-height:174px}
+  #sideline-detail{width:100%;min-width:0}
+  .sideline-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:8px}
+  .sideline-actions button{min-height:44px;margin:0;padding:7px;font-size:.85rem}
+  .script{display:block;overflow-x:auto}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
 <main><header class="hero"><div><p class="eyebrow">COLORADO / ISAAC WILSON / DISCO PLAYBOOK</p><h1>GO-GO Film Room</h1><nav class="jump" aria-label="Film room sections"><a href="#sideline">Sideline</a><a href="#call-sheet">Call sheet</a><a href="#simulation">Defense lab</a><a href="#replay">Quick replays</a><a href="#audible-board">Blitz answers</a><a href="#formations">Formations</a><a href="#opening-script">Opening script</a><a href="#controller">Controls</a><a href="#listen">Listen</a></nav></div></header>
+<nav class="quick-nav" aria-label="Film Room shortcuts"><a href="#sideline">Sideline</a><a href="#simulation">Defense lab</a><a href="#opening-script">Opening drive</a><a href="#listen">Listen</a></nav>
 <section id="sideline" aria-labelledby="sideline-title">
   <div class="sideline-head">
     <div><h2 id="sideline-title">Sideline call sheet</h2><p>DISCO offense</p></div>
     <button type="button" id="sideline-print">Print call sheet</button>
   </div>
   <div class="sideline-controls">
-    <label>Package <select id="sideline-package"><option value="all">All verified calls</option><option value="houston">Houston game plan</option></select></label>
+    <label>Package <select id="sideline-package"><option value="all">All verified calls</option><option value="houston">Houston game plan</option><option value="saved">Saved calls</option></select></label>
     <label>Find a play <input id="sideline-search" type="search" placeholder="Formation, play or button"></label>
     <label>Play clock <input id="sideline-clock" type="number" min="0" max="40" placeholder="Seconds" inputmode="numeric"></label>
   </div>
@@ -40,7 +64,7 @@ html{scroll-behavior:smooth}body{font:16px/1.55 "Segoe UI",system-ui,sans-serif;
     <div id="sideline-plays" aria-label="Play list"></div>
     <aside id="sideline-detail" aria-live="polite">
       <p id="sideline-slot"></p><h3 id="sideline-play"></h3><p id="sideline-read"></p>
-      <div class="sideline-actions"><button id="sideline-listen" type="button">Listen to lesson</button><button id="sideline-cue" type="button">Read live cue</button><button id="sideline-rep" type="button">Open defensive rep</button></div>
+      <div class="sideline-actions"><button id="sideline-pin" type="button" aria-pressed="false">Save call</button><button id="sideline-listen" type="button">Listen to lesson</button><button id="sideline-cue" type="button">Read live cue</button><button id="sideline-rep" type="button">Open defensive rep</button></div>
     </aside>
   </div>
   <div id="sideline-print-sheet"></div>
